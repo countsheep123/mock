@@ -1,19 +1,20 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"os"
+
+	"github.com/countsheep123/mock"
 )
 
-func load(filepath string) ([]*handler, error) {
-	file, err := ioutil.ReadFile(filepath)
+func load(filepath string) ([]*mock.Handler, error) {
+	f, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
 	}
 
-	var handlers []*handler
-	decoder := json.NewDecoder(bytes.NewReader(file))
+	var handlers []*mock.Handler
+	decoder := json.NewDecoder(f)
 	decoder.UseNumber()
 	err = decoder.Decode(&handlers)
 	if err != nil {

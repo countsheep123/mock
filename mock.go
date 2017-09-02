@@ -1,22 +1,20 @@
-package main
+package mock
 
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"sync"
 )
 
-func serve(handlers []*handler) {
+func Serve(handlers []*Handler) {
 	wg := &sync.WaitGroup{}
-	fmt.Println("---------- Endpoints ----------")
-	for i := range handlers {
-		handler := handlers[i]
+	fmt.Fprintln(os.Stdout, "---------- Endpoints ----------")
+	for _, handler := range handlers {
 		addr := fmt.Sprintf(":%d", handler.Port)
-		for j := range handler.Endpoints {
-			endpoint := handler.Endpoints[j]
-			for k := range endpoint.Methods {
-				method := endpoint.Methods[k]
-				fmt.Printf("%6s %8s %s\n", addr, fmt.Sprintf("[%s]", method.Method), endpoint.Endpoint)
+		for _, endpoint := range handler.Endpoints {
+			for _, method := range endpoint.Methods {
+				fmt.Fprintf(os.Stdout, "%6s %8s %s\n", addr, fmt.Sprintf("[%s]", method.Method), endpoint.Endpoint)
 			}
 		}
 		wg.Add(1)
@@ -25,6 +23,6 @@ func serve(handlers []*handler) {
 			wg.Done()
 		}()
 	}
-	fmt.Println("-------------------------------")
+	fmt.Fprintln(os.Stdout, "-------------------------------")
 	wg.Wait()
 }

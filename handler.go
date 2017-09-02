@@ -1,4 +1,4 @@
-package main
+package mock
 
 import (
 	"encoding/json"
@@ -6,23 +6,23 @@ import (
 	"net/http"
 )
 
-type handler struct {
+type Handler struct {
 	Port      int64       `json:"port"`
-	Endpoints []*endpoint `json:"endpoints"`
+	Endpoints []*Endpoint `json:"endpoints"`
 }
 
-type endpoint struct {
+type Endpoint struct {
 	Endpoint string    `json:"endpoint"`
-	Methods  []*method `json:"methods"`
+	Methods  []*Method `json:"methods"`
 }
 
-type method struct {
+type Method struct {
 	Method   string      `json:"method"`
 	Status   int         `json:"status"`
 	Response interface{} `json:"response"`
 }
 
-func (handler *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (handler *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, endpoint := range handler.Endpoints {
 		for _, method := range endpoint.Methods {
 			if endpoint.Endpoint == r.URL.Path &&
