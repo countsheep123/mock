@@ -36,6 +36,7 @@ func (handler *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 
 				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				w.Header().Set("Access-Control-Allow-Origin", "*")
 				w.WriteHeader(method.Status)
 				w.Write(jsonBytes)
 				fmt.Printf("===> [%d] %6s %s\n", http.StatusOK, r.Method, r.URL)
