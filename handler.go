@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
+	"sort"
 )
 
 type Handler struct {
@@ -25,7 +27,20 @@ type Method struct {
 func (handler *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, endpoint := range handler.Endpoints {
 		for _, method := range endpoint.Methods {
-			if endpoint.Endpoint == r.URL.Path &&
+			e, err := normalize(endpoint.Endpoint)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				fmt.Printf("===> [%d] %6s %s\n", http.StatusInternalServerError, r.Method, r.URL)
+				return
+			}
+			reqEndpoint, err := normalize(r.URL.String())
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				fmt.Printf("===> [%d] %6s %s\n", http.StatusInternalServerError, r.Method, r.URL)
+				return
+			}
+
+			if e == reqEndpoint &&
 				r.Method == method.Method {
 
 				jsonBytes, err := json.Marshal(method.Response)
@@ -47,4 +62,36 @@ func (handler *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNotFound)
 	fmt.Printf("===> [%d] %6s %s\n", http.StatusNotFound, r.Method, r.URL)
+}
+
+func normalize(endpoint string) (string, error) {
+	oldURL, err := url.Parse(endpoint)
+	if err != nil {
+		return "", err
+	}
+	q := oldURL.Query()
+
+	newQuery := url.Values{}
+	for _, k := range keys(q) {
+		vs := q[k]
+		sort.Strings(vs)
+		for _, v := range vs {
+			newQuery.Add(k, v)
+		}
+	}
+
+	newURL, err := url.Parse(oldURL.Path)
+	if err != nil {
+		return "", err
+	}
+	newURL.RawQuery = newQuery.Encode()
+	return newURL.String(), nil
+}
+
+func keys(v url.Values) []string {
+	keys := []string{}
+	for k := range v {
+		keys = append(keys, k)
+	}
+	return keys
 }
